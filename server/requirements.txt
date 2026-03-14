@@ -1,0 +1,7 @@
+Flask
+python-dotenv
+pyotp
+requests
+PyNaCl
+cffi
+cryptography

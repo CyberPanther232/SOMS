@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOMS - Partner Messaging</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --text-primary: #1c1e21;
+            --text-secondary: #65676b;
+            --header-bg: #ffffff;
+            --message-sent: #dcf8c6;
+            --message-received: #ffffff;
+            --accent-color: #0084ff;
+            --accent-hover: #0073e6;
+            --input-bg: #f0f2f5;
+            --read-color: #34b7f1;
+            --danger-color: #ff4d4f;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --header-height: 70px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0b141a;
+            --text-primary: #e9edef;
+            --text-secondary: #8696a0;
+            --header-bg: #202c33;
+            --message-sent: #005c4b;
+            --message-received: #202c33;
+            --accent-color: #00a884;
+            --accent-hover: #06cf9c;
+            --input-bg: #2a3942;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.2s; }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color); color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #app { display: flex; flex-direction: column; height: 100%; width: 100%; }
+
+        .hidden { display: none !important; }
+
+        /* --- Auth View --- */
+        #auth-view {
+            height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--accent-color), #00c6ff);
+            position: fixed; top: 0; left: 0; z-index: 2000;
+        }
+
+        .auth-card {
+            width: 90%; max-width: 420px; padding: 2.5rem;
+            background: var(--header-bg); border-radius: 16px;
+            box-shadow: var(--card-shadow); text-align: center;
+        }
+
+        .auth-card h1 { margin: 0 0 0.5rem 0; font-size: 2.5rem; color: var(--accent-color); }
+        .form-group { margin-bottom: 1.2rem; text-align: left; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; }
+        .form-group input {
+            width: 100%; padding: 0.8rem 1rem; border: 1.5px solid #e1e4e8; border-radius: 10px;
+            background: var(--input-bg); color: var(--text-primary); outline: none;
+        }
+
+        .auth-btn {
+            width: 100%; padding: 1rem; margin-top: 1rem; border: none; border-radius: 10px;
+            background: var(--accent-color); color: white; font-weight: 700; cursor: pointer;
+        }
+
+        /* --- Chat View --- */
+        #chat-view {
+            display: flex; flex-direction: column; height: 100vh; width: 100%;
+        }
+
+        header {
+            height: var(--header-height); background-color: var(--header-bg);
+            padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 100; flex-shrink: 0;
+        }
+
+        .partner-profile { display: flex; align-items: center; gap: 12px; }
+        .avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: var(--accent-color); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        #chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        #messages {
+            flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px;
+            background-repeat: no-repeat; background-size: cover; background-position: center;
+        }
+
+        .message-row { display: flex; flex-direction: column; width: 100%; }
+        .message {
+            max-width: 75%; padding: 10px 14px; border-radius: 12px; position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 0.95rem; line-height: 1.5;
+        }
+        .sent { align-self: flex-end; background-color: var(--message-sent); border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background-color: var(--message-received); border-bottom-left-radius: 2px; }
+
+        .message img, .message video { max-width: 100%; border-radius: 8px; margin-top: 4px; display: block; }
+
+        .message-actions {
+            position: absolute; top: -12px; right: 0; opacity: 0; display: flex; gap: 4px;
+            background: var(--header-bg); border-radius: 20px; padding: 4px 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: opacity 0.2s;
+        }
+        .message:hover .message-actions { opacity: 1; }
+
+        footer {
+            height: 70px; background-color: var(--header-bg); padding: 0 1.5rem;
+            display: flex; gap: 12px; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); flex-shrink: 0;
+        }
+
+        .input-wrapper { flex: 1; background: var(--input-bg); border-radius: 24px; padding: 0 16px; }
+        footer input[type="text"] { width: 100%; padding: 12px 0; border: none; background: transparent; color: var(--text-primary); outline: none; }
+
+        .icon-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-secondary); }
+        .send-btn {
+            width: 45px; height: 45px; border-radius: 50%; border: none;
+            background: var(--accent-color); color: white; cursor: pointer; font-size: 1.2rem;
+        }
+
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 1000;
+            align-items: center; justify-content: center; backdrop-filter: blur(4px);
+        }
+        .card { width: 90%; max-width: 400px; background: var(--header-bg); border-radius: 20px; padding: 2rem; overflow-y: auto; max-height: 90vh; }
+
+        .deleted-text { font-style: italic; opacity: 0.6; }
+        .edited-tag { font-size: 0.6rem; margin-left: 4px; opacity: 0.5; }
+    </style>
+</head>
+<body data-theme="light">
+    <div id="app">
+        <!-- Auth View -->
+        <div id="auth-view" class="auth-wrapper">
+            <div class="auth-card">
+                <h1>SOMS</h1>
+                <p>Significant Others Messaging Service</p>
+                <div id="login-form">
+                    <div class="form-group"><label>Username</label><input type="text" id="login-username"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="login-password"></div>
+                    <button class="auth-btn" onclick="login()">Login</button>
+                    <p style="margin-top:1rem">New? <a href="#" onclick="toggleAuth(false)">Create Account</a></p>
+                </div>
+                <div id="mfa-login-form" class="hidden">
+                    <p>Enter 2FA Code</p>
+                    <div class="form-group"><input type="text" id="mfa-login-code" maxlength="6" style="text-align:center; font-size:1.5rem"></div>
+                    <button class="auth-btn" onclick="verifyMFALogin()">Verify</button>
+                </div>
+                <div id="signup-form" class="hidden">
+                    <div class="form-group"><label>Username</label><input type="text" id="signup-username"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="signup-email"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="signup-password"></div>
+                    <div class="form-group"><label>Partner</label><input type="text" id="signup-partner"></div>
+                    <button class="auth-btn" onclick="signup()">Sign Up</button>
+                    <p style="margin-top:1rem">Have account? <a href="#" onclick="toggleAuth(true)">Login</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chat-view" class="hidden">
+            <header>
+                <div class="partner-profile">
+                    <div class="avatar" id="partner-avatar">❤️</div>
+                    <div>
+                        <div id="partner-name" style="font-weight:700">Partner</div>
+                        <div style="font-size:0.7rem; opacity:0.6">Encrypted</div>
+                    </div>
+                </div>
+                <div>
+                    <button class="icon-btn" onclick="toggleSettings(true)">⚙️</button>
+                    <button class="icon-btn" onclick="logout()">🚪</button>
+                </div>
+            </header>
+
+            <main id="chat-container">
+                <div id="messages"></div>
+            </main>
+
+            <footer>
+                <input type="file" id="media-input" class="hidden" accept="image/*,video/*" onchange="handleMediaSelect(this)">
+                <button class="icon-btn" onclick="document.getElementById('media-input').click()">📎</button>
+                <div class="input-wrapper">
+                    <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKey(event)">
+                </div>
+                <button class="send-btn" onclick="sendMessage()">➔</button>
+            </footer>
+
+            <div id="settings-overlay" class="overlay" onclick="toggleSettings(false)">
+                <div class="card" onclick="event.stopPropagation()">
+                    <h2>Settings</h2>
+                    <p>Theme: <select id="theme-select" onchange="updateSettings()"><option value="light">Light</option><option value="dark">Dark</option></select></p>
+                    <p>Wallpaper: <input type="file" id="wallpaper-upload" class="hidden" onchange="handleWallpaperUpload(this)"><button class="auth-btn" style="width:auto" onclick="document.getElementById('wallpaper-upload').click()">Upload</button></p>
+                    <p>Receipts: <input type="checkbox" id="receipts-checkbox" onchange="updateSettings()"></p>
+                    <p>Discord Webhook: <input type="text" id="discord-webhook" placeholder="https://discord.com/api/webhooks/..." style="width:100%" onchange="updateSettings()"></p>
+                    <hr>
+                    <h3>Security</h3>
+                    <button class="auth-btn" style="background:#0084ff" onclick="openPasswordModal()">Change Password</button>
+                    <button id="mfa-setup-btn" class="auth-btn" style="background:#00a884" onclick="setupMFA()">Enable 2FA</button>
+                    <hr>
+                    <button class="auth-btn" style="background:#666" onclick="toggleSettings(false)">Close</button>
+                </div>
+            </div>
+
+            <!-- MFA Setup Modal -->
+            <div id="mfa-overlay" class="overlay">
+                <div class="card">
+                    <h3>Setup 2FA</h3>
+                    <p>1. Copy this secret key into your Authenticator App:</p>
+                    <p><strong id="mfa-secret-text" style="font-family:monospace; font-size:1.2rem; background:#eee; padding:5px"></strong></p>
+                    <p>2. Enter the 6-digit code to verify:</p>
+                    <input type="text" id="mfa-verify-code" maxlength="6" style="width:100%; padding:10px; text-align:center">
+                    <button class="auth-btn" onclick="verifyMFASetup()">Verify & Enable</button>
+                    <button class="auth-btn" style="background:#666" onclick="closeMFA()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Password Change Modal -->
+            <div id="pw-overlay" class="overlay">
+                <div class="card">
+                    <h3>Change Password</h3>
+                    <input type="password" id="old-pw" placeholder="Old Password" style="width:100%; padding:10px; margin-bottom:10px">
+                    <input type="password" id="new-pw" placeholder="New Password" style="width:100%; padding:10px">
+                    <button class="auth-btn" onclick="changePassword()">Update Password</button>
+                    <button class="auth-btn" style="background:#666" onclick="closePW()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let pollInterval = null;
+        let lastMessageId = 0;
+        let mfaPendingUserId = null;
+
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/local/status');
+                if (res.ok) { currentUser = await res.json(); showChat(); }
+            } catch (e) {}
+        }
+
+        function toggleAuth(isLogin) {
+            document.getElementById('login-form').classList.toggle('hidden', !isLogin);
+            document.getElementById('signup-form').classList.toggle('hidden', isLogin);
+            document.getElementById('mfa-login-form').classList.add('hidden');
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const res = await fetch('/api/local/login', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            const data = await res.json();
+            if (data.mfa_required) {
+                mfaPendingUserId = data.user_id;
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('mfa-login-form').classList.remove('hidden');
+            } else if (res.ok) {
+                currentUser = data; showChat();
+            } else alert('Login failed');
+        }
+
+        async function verifyMFALogin() {
+            const code = document.getElementById('mfa-login-code').value;
+            const res = await fetch('/api/local/login/mfa', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({user_id: mfaPendingUserId, code})
+            });
+            if (res.ok) { currentUser = await res.json(); showChat(); }
+            else alert('Invalid 2FA Code');
+        }
+
+        async function signup() {
+            const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const partner_username = document.getElementById('signup-partner').value;
+            await fetch('/api/local/signup', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, email, password, partner_username})
+            });
+            alert('Signup success!'); toggleAuth(true);
+        }
+
+        function showChat() {
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('theme-select').value = currentUser.theme || 'light';
+            document.getElementById('receipts-checkbox').checked = currentUser.receipts_enabled;
+            document.getElementById('discord-webhook').value = currentUser.discord_webhook || '';
+            document.getElementById('mfa-setup-btn').innerText = currentUser.mfa_enabled ? "2FA Enabled" : "Enable 2FA";
+            document.getElementById('mfa-setup-btn').disabled = currentUser.mfa_enabled;
+            
+            if (currentUser.partner_id) document.getElementById('partner-name').innerText = "Partner";
+            else document.getElementById('partner-name').innerText = "Waiting for partner...";
+            
+            if (Notification.permission !== "granted") Notification.requestPermission();
+            
+            applySettings();
+            startPolling();
+        }
+
+        function applySettings() {
+            document.body.setAttribute('data-theme', currentUser.theme);
+            document.getElementById('messages').style.backgroundImage = currentUser.wallpaper ? `url(${currentUser.wallpaper})` : 'none';
+        }
+
+        async function updateSettings() {
+            currentUser.theme = document.getElementById('theme-select').value;
+            currentUser.receipts_enabled = document.getElementById('receipts-checkbox').checked;
+            currentUser.discord_webhook = document.getElementById('discord-webhook').value;
+            applySettings();
+            await fetch('/api/local/settings', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({theme: currentUser.theme, receipts_enabled: currentUser.receipts_enabled, discord_webhook: currentUser.discord_webhook})
+            });
+        }
+
+        async function setupMFA() {
+            const res = await fetch('/api/local/user/mfa/setup', {method: 'POST'});
+            const data = await res.json();
+            document.getElementById('mfa-secret-text').innerText = data.secret;
+            document.getElementById('mfa-overlay').style.display = 'flex';
+        }
+
+        async function verifyMFASetup() {
+            const code = document.getElementById('mfa-verify-code').value;
+            const res = await fetch('/api/local/user/mfa/verify', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({code})
+            });
+            if (res.ok) { 
+                alert('2FA Enabled!'); closeMFA(); 
+                currentUser.mfa_enabled = true;
+                document.getElementById('mfa-setup-btn').innerText = "2FA Enabled";
+                document.getElementById('mfa-setup-btn').disabled = true;
+            } else alert('Invalid Code');
+        }
+
+        function closeMFA() { document.getElementById('mfa-overlay').style.display = 'none'; }
+        function openPasswordModal() { document.getElementById('pw-overlay').style.display = 'flex'; }
+        function closePW() { document.getElementById('pw-overlay').style.display = 'none'; }
+
+        async function changePassword() {
+            const old_password = document.getElementById('old-pw').value;
+            const new_password = document.getElementById('new-pw').value;
+            const res = await fetch('/api/local/user/password', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({old_password, new_password})
+            });
+            if (res.ok) { alert('Password Updated!'); closePW(); }
+            else alert('Failed to update password');
+        }
+
+        async function handleWallpaperUpload(input) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                currentUser.wallpaper = e.target.result;
+                applySettings();
+                await fetch('/api/local/settings', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({wallpaper: currentUser.wallpaper}) });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function toggleSettings(show) { document.getElementById('settings-overlay').style.display = show ? 'flex' : 'none'; }
+
+        async function sendMessage(contentOverride = null, type = 'text') {
+            const input = document.getElementById('message-input');
+            const content = contentOverride || input.value;
+            if (!content) return;
+            if (!contentOverride) input.value = '';
+            await fetch('/api/local/messages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({content, message_type: type}) });
+            fetchMessages();
+        }
+
+        async function deleteMessage(id) {
+            if (confirm('Delete?')) await fetch('/api/local/messages/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message_id: id}) });
+            fetchMessages();
+        }
+
+        async function editMessage(id, old) {
+            const val = prompt('Edit:', old);
+            if (val) await fetch('/api/local/messages/edit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message_id: id, content: val}) });
+            fetchMessages();
+        }
+
+        async function handleMediaSelect(input) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const type = input.files[0].type.startsWith('image') ? 'image' : 'video';
+                await sendMessage(e.target.result, type);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+
+        async function fetchMessages() {
+            if (!currentUser) return;
+            const res = await fetch('/api/local/messages');
+            if (res.ok) {
+                const messages = await res.json();
+                if (messages.length > 0) {
+                    const latest = messages[messages.length - 1];
+                    if (latest.id > lastMessageId && latest.sender_id !== currentUser.id) {
+                        new Notification("SOMS", { body: "New message from partner!" });
+                        lastMessageId = latest.id;
+                    }
+                }
+                renderMessages(messages);
+                if (messages.some(m => m.sender_id !== currentUser.id && m.status === 'sent')) fetch('/api/local/messages/read', {method: 'POST'});
+            }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messages');
+            const shouldScroll = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
+            container.innerHTML = '';
+            messages.forEach(m => {
+                const isMe = m.sender_id === currentUser.id;
+                const div = document.createElement('div');
+                div.className = 'message-row';
+                let content = '';
+                if (m.is_deleted) content = `<div class="message received deleted-text">[Deleted]</div>`;
+                else if (m.message_type === 'image') content = `<div class="message ${isMe?'sent':'received'}"><img src="${m.content}"></div>`;
+                else if (m.message_type === 'video') content = `<div class="message ${isMe?'sent':'received'}"><video src="${m.content}" controls></video></div>`;
+                else {
+                    const giphy = m.content.match(/https:\/\/giphy\.com\/gifs\/([a-zA-Z0-9-]+)/i) || m.content.match(/https:\/\/media\.giphy\.com\/media\/([a-zA-Z0-9]+)\/giphy\.gif/i);
+                    if (giphy) content = `<div class="message ${isMe?'sent':'received'}"><img src="https://media.giphy.com/media/${giphy[1].split('-').pop()}/giphy.gif"></div>`;
+                    else content = `<div class="message ${isMe?'sent':'received'}">${m.content}${m.is_edited?' <small>(edited)</small>':''}</div>`;
+                }
+                const actions = (isMe && !m.is_deleted) ? `<div class="message-actions">${m.message_type==='text'?'<button onclick="editMessage('+m.id+', \''+m.content+'\')">✏️</button>':''}<button onclick="deleteMessage(${m.id})">🗑️</button></div>` : '';
+                const statusIcon = isMe ? (m.status === 'read' ? `<span style="color:#34b7f1; margin-left:4px">✔✔</span>` : `<span style="opacity:0.3; margin-left:4px">✔</span>`) : '';
+                div.innerHTML = `<div style="display:flex; flex-direction:column; align-items:${isMe?'flex-end':'flex-start'}; position:relative;">${actions}${content}<div style="font-size:0.6rem; opacity:0.5; padding:2px 5px">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${statusIcon}</div></div>`;
+                container.appendChild(div);
+            });
+            if (shouldScroll) container.scrollTop = container.scrollHeight;
+        }
+
+        function startPolling() { fetchMessages(); if (pollInterval) clearInterval(pollInterval); pollInterval = setInterval(fetchMessages, 3000); }
+        async function logout() { await fetch('/api/local/logout', {method: 'POST'}); location.reload(); }
+        checkStatus();
+    </script>
+</body>
+</html>

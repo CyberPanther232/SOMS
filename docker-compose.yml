@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server/data:/app/data
+    environment:
+      - SOMS_SERVER_PORT=5000
+      - SECRET_KEY=change-this-to-something-secure
+
+  client:
+    build: ./client
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./client/keys:/app/keys
+    environment:
+      - SOMS_SERVER_URL=http://server:5000
+      - SOMS_CLIENT_ADDR=:8080
+    depends_on:
+      - server
