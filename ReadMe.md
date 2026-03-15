@@ -1,4 +1,4 @@
-<img src="https://github.com/CyberPanther232/SOMS/blob/master/images/dark_soms_logo.png" height="500" width="500">
+<img src="https://github.com/CyberPanther232/SOMS/blob/master/images/dark_soms_logo.png" height="500" width="750">
 
 # SOMS - Significant Others Messaging Service
 
