@@ -1,3 +1,5 @@
+<img src="https://github.com/CyberPanther232/SOMS/blob/master/images/dark_soms_logo.png" height="500" width="500">
+
 # SOMS - Significant Others Messaging Service
 
 SOMS is a privacy-focused, end-to-end encrypted (E2EE) messaging application designed specifically for partners. Messages are encrypted on the client-side and can only be decrypted by the intended recipient or the sender. The server only stores encrypted blobs and has no access to message content.
