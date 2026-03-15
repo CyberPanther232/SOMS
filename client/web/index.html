@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOMS - Partner Messaging</title>
+    <link id="favicon" rel="icon" href="images/light_hd_soms_logo.ico">
     <style>
         :root {
             --bg-color: #f0f2f5;
@@ -19,6 +20,7 @@
             --danger-color: #ff4d4f;
             --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
             --header-height: 70px;
+            --default-bg: url('images/light_hd_soms_logo.png');
         }
 
         [data-theme="dark"] {
@@ -32,6 +34,7 @@
             --accent-hover: #06cf9c;
             --input-bg: #2a3942;
             --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --default-bg: url('images/dark_soms_logo.png');
         }
 
         * { box-sizing: border-box; transition: background-color 0.3s, color 0.2s; }
@@ -95,7 +98,8 @@
 
         #messages {
             flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px;
-            background-repeat: no-repeat; background-size: cover; background-position: center;
+            background-repeat: no-repeat; background-size: contain; background-position: center;
+            background-image: var(--default-bg);
         }
 
         .message-row { display: flex; flex-direction: column; width: 100%; }
@@ -317,7 +321,21 @@
 
         function applySettings() {
             document.body.setAttribute('data-theme', currentUser.theme);
-            document.getElementById('messages').style.backgroundImage = currentUser.wallpaper ? `url(${currentUser.wallpaper})` : 'none';
+            const messages = document.getElementById('messages');
+            if (currentUser.wallpaper) {
+                messages.style.backgroundImage = `url(${currentUser.wallpaper})`;
+                messages.style.backgroundSize = 'cover';
+            } else {
+                messages.style.backgroundImage = ''; // Use CSS default-bg
+                messages.style.backgroundSize = 'contain';
+            }
+            updateFavicon();
+        }
+
+        function updateFavicon() {
+            const favicon = document.getElementById('favicon');
+            const theme = (currentUser && currentUser.theme) || document.body.getAttribute('data-theme') || 'light';
+            favicon.href = theme === 'dark' ? 'images/dark_soms_logo.ico' : 'images/light_hd_soms_logo.ico';
         }
 
         async function updateSettings() {
@@ -455,6 +473,7 @@
         function startPolling() { fetchMessages(); if (pollInterval) clearInterval(pollInterval); pollInterval = setInterval(fetchMessages, 3000); }
         async function logout() { await fetch('/api/local/logout', {method: 'POST'}); location.reload(); }
         checkStatus();
+        updateFavicon();
     </script>
 </body>
 </html>

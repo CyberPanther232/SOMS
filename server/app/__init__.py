@@ -7,5 +7,4 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'soms-secret-default')
 
 initialize_db()
 
-from app import routes
 from . import api_routes
