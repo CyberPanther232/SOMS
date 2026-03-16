@@ -1,6 +1,6 @@
 <div align="center">
   <img src="images/dark_soms_logo.png" height="300" width="600" alt="SOMS Logo">
-  <h1>SOMS - Significant Others Messaging Service</h1>
+  <h1>SOMS - Significant Other Messaging Service</h1>
   <p><i>Privacy-focused, end-to-end encrypted (E2EE) messaging for partners.</i></p>
 </div>
 
