@@ -1,86 +1,96 @@
-<img src="https://github.com/CyberPanther232/SOMS/blob/master/images/dark_soms_logo.png" height="500" width="1000">
+<div align="center">
+  <img src="images/light_hd_soms_logo.png" height="300" width="600" alt="SOMS Logo">
+  <h1>SOMS - Significant Others Messaging Service</h1>
+  <p><i>Privacy-focused, end-to-end encrypted (E2EE) messaging for partners.</i></p>
+</div>
 
-# SOMS - Significant Others Messaging Service
+SOMS is an encrypted messaging application designed specifically for significant others. Messages are encrypted locally on the client and only decrypted by the intended recipient or sender. The server only stores encrypted blobs, ensuring your private conversations stay private.
 
-SOMS is a privacy-focused, end-to-end encrypted (E2EE) messaging application designed specifically for partners. Messages are encrypted on the client-side and can only be decrypted by the intended recipient or the sender. The server only stores encrypted blobs and has no access to message content.
+## ✨ Features
 
-## Features
-
-- **End-to-End Encryption**: Powered by NaCl (Curve25519, XSalsa20, and Poly1305).
-- **Partner Focused**: Link directly with your significant other upon signup.
-- **Media Support**: Send images, GIFs (via Giphy), and videos securely.
-- **Multi-Device Sync**: Robust "Double Encryption" allows both sender and receiver to access chat history from any device.
-- **Read Receipts**: Know when your partner has seen your message (with privacy controls).
-- **Customizable UI**: Dark/Light modes and custom chat wallpapers (upload your own!).
-- **Security**: 
-  - Change Password capability.
+- 🔐 **End-to-End Encryption**: NaCl (Curve25519, XSalsa20, Poly1305) powered security.
+- 👫 **Partner-Centric**: Direct linking with your partner during signup.
+- 🖼️ **Media Support**: Securely share images, videos, and Giphy animations.
+- 🌓 **Dynamic Themes**: Interactive Light/Dark modes with matching custom logos and favicons.
+- 🎨 **Customization**: Set custom wallpapers or enjoy the new theme-specific default backgrounds.
+- 🛡️ **Security Plus**: 
+  - Local Private Key storage (`client/keys/`).
   - Multi-Factor Authentication (TOTP/2FA).
-- **Notifications**:
-  - Browser/Desktop notifications.
-  - Discord Webhook integration.
-
-## Architecture
-
-- **Backend**: Python Flask (SQLite database).
-- **Client**: Go (handles all cryptography and serves the Web GUI).
+  - Secure Password management.
+- 🔔 **Stay Notified**: Desktop notifications and Discord Webhook integration.
 
 ---
 
-## Getting Started (Local Development)
+## 🚀 Quick Start (Docker)
+
+The fastest way to get SOMS running is with **Docker Compose**. This will orchestrate both the Python backend and the Go client automatically.
 
 ### 1. Prerequisites
-- Python 3.12+
-- Go 1.25+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-### 2. Setup the Server
-```bash
-cd server
-pip install -r requirements.txt
-python main.py
-```
-*Default: http://localhost:5000*
-
-### 3. Setup the Client
-```bash
-cd client
-go run main.go
-```
-*Default: http://localhost:8080*
-
----
-
-## Containerization (Docker)
-
-You can run the entire stack using Docker Compose:
-
+### 2. Launch SOMS
+From the project root, run:
 ```bash
 docker-compose up --build
 ```
 
-- **Client**: Accessible at `http://localhost:8080`
-- **Server**: Internal communication at `http://server:5000`
+### 3. Access the App
+- **Web Interface**: [http://localhost:8080](http://localhost:8080)
+- **API (Internal)**: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## Configuration (Environment Variables)
+## 🛠️ Local Development Setup
 
-### Server Options:
-- `SOMS_SERVER_HOST`: Host to bind to (default: `0.0.0.0`)
-- `SOMS_SERVER_PORT`: Port to listen on (default: `5000`)
-- `SECRET_KEY`: Flask secret key for session security.
-- `SOMS_DEBUG`: Enable debug mode (default: `True`)
+If you prefer to run the components manually:
 
-### Client Options:
-- `SOMS_SERVER_URL`: URL of the Python server (default: `http://localhost:5000`)
-- `SOMS_CLIENT_ADDR`: Address for the local Go client to listen on (default: `:8080`)
+### 1. Server (Python/Flask)
+```bash
+cd server
+# (Optional) Create a virtual environment
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+python main.py
+```
+
+### 2. Client (Go)
+```bash
+cd client
+go mod download
+go run main.go
+```
 
 ---
 
-## Usage Note
+## ⚙️ Configuration
 
-To test the partner linking:
-1. Register **User A** and specify **User B** as the partner.
-2. Register **User B** and specify **User A** as the partner.
-3. Once both are registered, they will be linked and can exchange encrypted messages.
+### Environment Variables
 
-**Security Warning**: The private keys are stored locally in the `client/keys/` directory. Do not lose this folder, or you will lose access to your message history!
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| **Server** | | |
+| `SOMS_SERVER_PORT` | Port for the backend API | `5000` |
+| `SECRET_KEY` | Flask session secret | `change-me` |
+| `SOMS_DEBUG` | Flask debug mode | `False` |
+| **Client** | | |
+| `SOMS_SERVER_URL` | URL of the SOMS Server | `http://localhost:5000` |
+| `SOMS_CLIENT_ADDR` | Local address to serve Web GUI | `:8080` |
+
+---
+
+## 🤝 How to Link Partners
+
+1. **User A** registers and enters **User B**'s username as their partner.
+2. **User B** registers and enters **User A**'s username as their partner.
+3. Once both are registered, the encrypted channel is established!
+
+> [!IMPORTANT]
+> **Backup your keys!** Private keys are stored in `client/keys/`. If you delete this folder or the Docker volume associated with it, you will lose access to your decrypted message history.
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ for privacy.</sub>
+</div>
