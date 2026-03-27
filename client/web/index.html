@@ -470,7 +470,7 @@
             if (shouldScroll) container.scrollTop = container.scrollHeight;
         }
 
-        function startPolling() { fetchMessages(); if (pollInterval) clearInterval(pollInterval); pollInterval = setInterval(fetchMessages, 3000); }
+        function startPolling() { fetchMessages(); if (pollInterval) clearInterval(pollInterval); pollInterval = setInterval(fetchMessages, 2000); }
         async function logout() { await fetch('/api/local/logout', {method: 'POST'}); location.reload(); }
         checkStatus();
         updateFavicon();
